@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Price Prediction</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f4f6f9;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h2, h3 {
+            text-align: center;
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 50px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            cursor: pointer;
+        }
+
+        .form-control {
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        #prediction-result {
+            margin-top: 30px;
+        }
+
+        #error-message {
+            margin: 20px 0;
+            padding: 10px;
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+        }
+
+        .img-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        img {
+            max-width: 100%;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #predicted-prices {
+            margin-top: 20px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #predicted-prices ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #predicted-prices ul li {
+            padding: 5px 0;
+            font-size: 16px;
+            color: #555;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        footer a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Stock Price Prediction</h2>
+        <form id="predict-form">
+            <div class="form-group">
+                <label for="ticker">Enter Stock Ticker (e.g., AAPL, GOOG):</label>
+                <input type="text" id="ticker" class="form-control" placeholder="Enter stock ticker" required>
+            </div>
+            <div class="form-group">
+                <label for="days">Number of Days to Predict (default 30):</label>
+                <input type="number" id="days" class="form-control" value="30" min="1" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Get Prediction</button>
+        </form>
+
+        <div id="prediction-result">
+            <h3 id="prediction-title" style="display: none;">Predicted Stock Prices</h3>
+            <div id="error-message" style="display: none;"></div>
+            <div class="img-container" id="graph-container" style="display: none;">
+                <img id="stock-graph" src="" alt="Stock Price Prediction Graph">
+            </div>
+            <div id="predicted-prices" style="display: none;">
+                <h4>Predicted Prices (Next <span id="days-count"></span> Days):</h4>
+                <ul id="prices-list"></ul>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2024 Stock Prediction App | Made with ❤️ by <a href="#">Sidhdesh Jindal</a>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#predict-form').on('submit', function(event) {
+                event.preventDefault();
+
+                const ticker = $('#ticker').val();
+                const days = $('#days').val();
+
+                $.ajax({
+                    url: '/predict',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ ticker: ticker, days: days }),
+                    success: function(response) {
+                        $('#error-message').hide();
+                        $('#prediction-title').show();
+                        $('#graph-container').show();
+                        $('#predicted-prices').show();
+                        $('#stock-graph').attr('src', response.graph_path);
+                        $('#days-count').text(days);
+
+                        // Display the predicted prices
+                        $('#prices-list').empty();
+                        response.predicted_prices.forEach(function(price, index) {
+                            $('#prices-list').append(`<li>Day ${index + 1}: $${price.toFixed(2)}</li>`);
+                        });
+                    },
+                    error: function(response) {
+                        $('#prediction-title').hide();
+                        $('#graph-container').hide();
+                        $('#predicted-prices').hide();
+                        $('#error-message').show().text(response.responseJSON.error || 'An error occurred while fetching the prediction.');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
